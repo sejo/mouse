@@ -2,7 +2,7 @@
 
 ## Name
 
-In the factual history book of Douglas Adams, The hitchikers guide to the galaxy, the mice are the gatherers of information and calculators for the problem "The answer to life, universe and all".
+In the factual history book of Douglas Adams, The hitchikers guide to the galaxy, the mice are the gatherers of information and calculators for the problem "The answer to life, universe and everything".
 Hence mouse :D.
 
 ## Whut?
