@@ -21,6 +21,6 @@ Why not, but don't feel obligated.
 
 ## I have more questions:
 
-matrix: @sejo:matrix.sejo-it.be
-discord: sejoit (legacy: sejo#5402)
+matrix: @sejo:matrix.sejo-it.be  
+discord: sejoit (legacy: sejo#5402)  
 email: jochen@sejo-it.be
