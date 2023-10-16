@@ -4,8 +4,9 @@ mod gatherers;
 use std::collections::HashSet; 
 use crate::types::fact::{Fact, FactData};
 use crate::gatherers::environment::EnvironmentData;
+use crate::gatherers::ip::IPData;
 use clap::Parser;
-use csv::{ Writer};
+use csv::Writer;
 
 
 #[derive(Parser)]
@@ -22,6 +23,7 @@ struct Args {
 fn gather_all() -> Vec<FactData>{
     let mut data: Vec<FactData> = vec![];
     data.append(&mut gather(&EnvironmentData{}));
+    data.append(&mut gather(&IPData{}));
     return data;
 }
 
@@ -35,6 +37,9 @@ fn gather_list(gatherers: HashSet<String>) -> Vec<FactData> {
             "env" => for d in gather(&EnvironmentData{}) {
                 data.push(d); 
             },
+            "ip" => for d in gather(&IPData{}) {
+                data.push(d);
+            }
             _ => for d in gather_all() {
                 data.push(d);
             }      
@@ -49,7 +54,7 @@ fn main() {
     let args = Args::parse();
     let mut data:Vec<FactData> = vec![];
 
-    if !args.gatherer.is_some() {
+    if args.gatherer.is_none() {
         data.append(&mut gather_all());
     } else {
         // sanitize the gatherer list
@@ -59,9 +64,6 @@ fn main() {
         };
         data.append(&mut gather_list(ugatherers));
        }
-    println!("got here: {}", data.len());
-
-
     match args.output.as_str() {
         "json" => {
             let serialized_json = serde_json::to_string(&data).unwrap();

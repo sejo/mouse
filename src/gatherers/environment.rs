@@ -1,4 +1,4 @@
-use crate::types::{fact::{Fact, FactData}};
+use crate::types::fact::{FactData, Fact};
 use std::env;
 
 pub struct EnvironmentData {}
