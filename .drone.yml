@@ -1,44 +1,124 @@
----
 kind: pipeline
 type: docker
-name: mouse-amd64
-
+name: 'Rust cross compilation'
 platform:
   arch: amd64
 
+# Shared volume for the Docker in Docker service and build steps.
+# Without this, cross won't be able to find a running Docker agent.
+volumes:
+- name: dockersock
+  temp: {}
+
+services:
+- image: docker:dind
+  name: docker
+  privileged: true   # Docker in Docker requires this, sadly.
+  pull: true
+  volumes:
+  - name: dockersock
+    path: /var/run
+
+# Ensure Docker agent has started before continuing.
 steps:
-  - name: test
-    image: rust:1.73
-    commands:
-      - cargo test
-  - name: compile
-    image: rust:1.73
-    commands:
-      - cargo build --target x86_64-unknown-linux-gnu
+- name: Wait for Docker
+  image: rust-dind-cross:1.73-full
+  pull: true
+  commands:
+  - mkdir artifacts
+  - while ! docker image ls; do sleep 1; done
+  - docker info
+  - docker pull hello-world:latest
+  volumes:
+  - name: dockersock
+    path: /var/run
 
+# Build for aarch64-unknown-linux-gnu (arm64)
+- name: Build for arm64-gnu
+  image: rust-dind-cross:1.73-full
+  pull: true
+  environment:
+    CROSS_REMOTE: true
+  commands:
+  - cross build --release --target aarch64-unknown-linux-gnu
+  - cp target/aarch64-unknown-linux-gnu/release/mouse artifacts/mouse-arm64-gnu
+  - rm -rf target/aarch64-unknown-linux-gnu/release/*
+  depends_on:
+  - Wait for Docker
+  volumes:
+  - name: dockersock
+    path: /var/run
 
----
-kind: pipeline
-type: docker
-name: mouse-arm64
+# Build for aarch64-unknown-linux-musl (arm64 with Alpine linux)
+- name: Build for arm64-musl
+  image: rust-dind-cross:1.73-full
+  pull: true
+  environment:
+    CROSS_REMOTE: true
+  commands:
+  - cross build --release --target aarch64-unknown-linux-musl
+  - cp target/aarch64-unknown-linux-musl/release/mouse artifacts/mouse-arm64-musl
+  - rm -rf target/aarch64-unknown-linux-musl/release/*
+  depends_on:
+  - Wait for Docker
+  volumes:
+  - name: dockersock
+    path: /var/run
 
-platform:
-  arch: arm64
+# Build for x86_64-unknown-linux-gnu (amd64)
+- name: Build for amd64-gnu
+  image: rust-dind-cross:1.73-full
+  pull: true
+  environment:
+    CROSS_REMOTE: true
+  commands:
+  - cross build --release --target x86_64-unknown-linux-gnu
+  - cp target/x86_64-unknown-linux-gnu/release/mouse artifacts/mouse-amd64-gnu
+  - rm -rf target/x86_64-unknown-linux-gnu/release/*
+  depends_on:
+  - Wait for Docker
+  volumes:
+  - name: dockersock
+    path: /var/run
 
-steps:
-  - name: test
-    image: rust:1.73
-    commands:
-      - cargo test
-  - name: compile
-    image: rust:1.73
-    commands:
-      - cargo build --target aarch64-unknown-linux-gnu
-  - name: publish crate
-    image: rust:1.73
-    environment:
-      TOKEN:
-        from_secret: gitea_token
-    commands:
-      - cargo publish --registry gita --token $TOKEN
+# Build for x86_64-unknown-linux-musl (amd64 with Alpine linux)
+- name: Build for amd64-musl
+  image: rust-dind-cross:1.73-full
+  pull: true
+  environment:
+    CROSS_REMOTE: true
+  commands:
+  - cross build --release --target x86_64-unknown-linux-musl
+  - cp target/x86_64-unknown-linux-musl/release/mouse artifacts/mouse-amd64-musl
+  - rm -rf target/x86_64-unknown-linux-musl/release/*
+  depends_on:
+  - Wait for Docker
+  volumes:
+  - name: dockersock
+    path: /var/run
 
+# Show all built artifacts
+- name: Show built artifacts
+  image: rust-dind-cross:1.73-full
+  commands:
+  - ls -lah artifacts
+  depends_on:
+  - Build for arm64-gnu
+  - Build for arm64-musl
+  - Build for amd64-gnu
+  - Build for amd64-musl
+  
+# When a tag is created, this step gets added.
+- name: Create release on gitea
+  image: plugins/gitea-release
+  settings:
+    api_key:
+      from_secret: gitea_token
+    base_url: https://gitea.sejo-it.be
+    checksum: sha256
+    files: artifacts/*
+  depends_on:
+  - Show built artifacts
+  when:
+    event:
+    - tag
