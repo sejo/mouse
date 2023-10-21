@@ -34,7 +34,7 @@ steps:
     image: rust:1.73
     commands:
       - cargo build --target aarch64-unknown-linux-gnu
-  - name: 
+  - name: publish crate
     image: rust:1.73
     environment:
       TOKEN:
