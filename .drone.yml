@@ -1,10 +1,17 @@
 ---
 kind: pipeline
 type: docker
-name: default
+name: mouse-amd64
+
+platform:
+  arch: amd64
 
 steps:
   - name: test
     image: rust:1.73
     commands:
       - cargo test
+  - name: compile
+    image: rust:1.73
+    commands:
+      - cargo build --target x86_64-unknown-linux-gnu
