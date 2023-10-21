@@ -1,9 +1,25 @@
-use crate::{types::fact::{Fact, FactData}, util::command::get_result_as_string};
+use std::process::Command;
+
+use crate::types::fact::{Fact, FactData};
 use serde::{Deserialize, Serialize};
 
-pub struct IPData {}
+pub struct SystemData {}
 
-impl IPData {}
+impl SystemData {}
+
+
+
+#[derive(Serialize, Deserialize)]
+struct UnameData{
+    kernel_name: String,
+    node_name: String,
+    kernel_release: String,
+    kernel_version: String,
+    machine: String,
+    processor: String,
+    hardware_platform: String,
+    operating_system: String,
+}
 
 #[derive(Serialize, Deserialize)]
 struct IpAddrInfo {
@@ -35,11 +51,17 @@ struct IpAddr {
     addr_info: Vec<IpAddrInfo>,
 }
 
-impl Fact for IPData {
+impl Fact for SystemData {
     fn gather(&self) -> Vec<FactData> {
         let mut vfd: Vec<FactData> = vec![];
         let time_set = self.get_epoch_ms();
-        let ips: Vec<IpAddr> = serde_json::from_str(get_result_as_string("ip", vec!["-j", "addr"]).as_str()).unwrap();
+        let output = Command::new("ip")
+            .arg("-j")
+            .arg("addr")
+            .output()
+            .expect("Failed to execute ip");
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let ips: Vec<IpAddr> = serde_json::from_str(stdout.as_str()).unwrap();
         for ip in ips {
             if ip.ifname != "lo" {
                 for addr_info in ip.addr_info {
@@ -78,30 +100,6 @@ impl Fact for IPData {
                 }
             }
         }
-        return vfd;
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-struct IpRoute {
-    dst: String,
-    gateway: Option<String>,
-    dev: String,
-    protocol: Option<String>,
-    metric: Option<i32>,
-    flags: Vec<String>,
-    scope: String,
-    prefsrc: String, 
-
-}
-
-impl Fact for IpRoute {
-    fn gather(&self) -> Vec<FactData> {
-        let mut vfd: Vec<FactData> = vec![];
-        let time_set = self.get_epoch_ms();
-        
-        let routes: Vec<IpRoute> = serde_json::from_str(get_result_as_string("ip", vec!["-j", "route"]).as_str()).unwrap();
-
         return vfd;
     }
 }

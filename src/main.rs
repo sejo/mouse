@@ -1,5 +1,6 @@
 mod types;
 mod gatherers;
+mod util;
 
 use std::collections::HashSet; 
 use crate::types::fact::{Fact, FactData};
