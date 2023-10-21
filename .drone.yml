@@ -39,5 +39,6 @@ steps:
     environment:
       TOKEN:
         from_secret: gitea_token
+    commands:
       - cargo publish --registry gita --token $TOKEN
 
