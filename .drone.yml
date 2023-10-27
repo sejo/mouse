@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: "Mouse release"
+name: "Mouse release pipeline"
 
 platform:
   arch: amd64
