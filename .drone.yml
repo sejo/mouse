@@ -1,0 +1,44 @@
+---
+kind: pipeline
+type: docker
+name: "Mouse release"
+
+platform:
+  arch: amd64
+
+trigger:
+  event:
+    - tag
+
+volumes:
+  - name: dockersock
+    host:
+      path: /var/run/docker.sock
+  - name: artifacts
+    temp: {}
+
+steps:
+  - name: build amd64
+    image: rust:1.73
+    commands:
+      - rustup target add x86_64-unknown-linux-musl
+      - rustup target add aarch64-unknown-linux-musl
+      - cargo build --target x86_64-unknown-linux-musl --bins -r
+      - cargo build --target aarch64-unknown-linux-musl --bins -r
+      - cp target/x86_64-unknown-linux-musl/release/mouse /artifcats/mouse-amd64
+      - cp target/aarch64-unknown-linux-musl/release/mouse /artifcats/mouse-arm64
+    volumes:
+      - name: artifacts
+        path: /artifcats/
+
+  - name: create gitea release
+    image: plugins/gitea-release
+    settings:
+      api_key:
+        from_secret: gitea_api_key
+      base_url: https://gitea.sejo-it.be
+      checksum: sha265
+      files: /artifacts/*
+    volumes:
+      - name: artifacts
+        path: /artifcats/

@@ -1,14 +1,16 @@
-mod types;
 mod gatherers;
+mod types;
 mod util;
 
-use std::collections::HashSet; 
-use crate::types::fact::{Fact, FactData};
-use crate::gatherers::environment::EnvironmentData;
-use crate::gatherers::ip::IPData;
-use clap::Parser;
-use csv::Writer;
+#[macro_use]
+extern crate serde_json;
 
+use crate::gatherers::environment::EnvironmentData;
+use crate::gatherers::ip::{IPData, IPRouteData};
+use crate::types::fact::Fact;
+use clap::Parser;
+use serde_json::Value;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -17,69 +19,61 @@ struct Args {
     #[arg(short, long)]
     gatherer: Option<Vec<String>>,
     /// Output format, yaml, json are supported
-    #[arg(short, long, default_value="yaml")]
+    #[arg(short, long, default_value = "yaml")]
     output: String,
 }
 
-fn gather_all() -> Vec<FactData>{
-    let mut data: Vec<FactData> = vec![];
-    data.append(&mut gather(&EnvironmentData{}));
-    data.append(&mut gather(&IPData{}));
-    return data;
-}
-
-fn gather_list(gatherers: HashSet<String>) -> Vec<FactData> {
-    let mut data: Vec<FactData> = vec![];
+fn gather_list(gatherers: HashSet<String>, output: &str) -> String {
+    let mut outmap: HashMap<String, Value> = HashMap::new();
     for g in gatherers {
         match g.as_str() {
-            "all" => for d in gather_all(){
-                data.push(d);
-            },
-            "env" => for d in gather(&EnvironmentData{}) {
-                data.push(d); 
-            },
-            "ip" => for d in gather(&IPData{}) {
-                data.push(d);
+            "env" => {
+                outmap.insert(
+                    "environment".to_string(),
+                    serde_json::from_str(&EnvironmentData {}.gather()).unwrap(),
+                );
             }
-            _ => for d in gather_all() {
-                data.push(d);
-            }      
+            "ipaddr" => {
+                outmap.insert(
+                    "ipaddr".to_string(),
+                    serde_json::from_str(&IPData {}.gather()).unwrap(),
+                );
+            }
+            "iproute" => {
+                outmap.insert(
+                    "iproute".to_string(),
+                    serde_json::from_str(&IPRouteData {}.gather()).unwrap(),
+                );
+            }
+            x => {
+                println!("unknown gatherer: {x}");
+            }
         };
     }
-    return data;
-}
-fn gather (t: &dyn Fact) -> Vec<FactData> {
-    return t.gather();
+    match output {
+        "json" => serde_json::to_string(&outmap).unwrap(),
+        "yaml" => serde_yaml::to_string(&outmap).unwrap(),
+        x => format!("Unknown output format {x}"),
+    }
 }
 fn main() {
     let args = Args::parse();
-    let mut data:Vec<FactData> = vec![];
-
-    if args.gatherer.is_none() {
-        data.append(&mut gather_all());
-    } else {
-        // sanitize the gatherer list
-        let ugatherers: HashSet<String> = match &args.gatherer {
-            Some(x) => x.into_iter().map(|name| name).cloned().collect::<HashSet<String>>(),
-            None => HashSet::<String>::new(),
-        };
-        data.append(&mut gather_list(ugatherers));
-       }
-    match args.output.as_str() {
-        "json" => {
-            let serialized_json = serde_json::to_string(&data).unwrap();
-            println!("{}", serialized_json);
-        },
-        "csv" => {
-            let mut writer = Writer::from_writer(vec![]);
-            for fd in data {
-                writer.serialize(fd).unwrap();
-            }
-            println!("{}", String::from_utf8(writer.into_inner().unwrap()).unwrap());
-        }
-        &_ =>  {
-            let serialized_yaml = serde_yaml::to_string(&data).unwrap();
-            println!("{}", serialized_yaml);
-        },
+    let output_format = match args.output.as_str() {
+        "json" => "json",
+        "yaml" => "yaml",
+        _ => "yaml",
     };
+    let all: HashSet<String> = HashSet::from([
+        "env".to_string(),
+        "ipaddr".to_string(),
+        "iproute".to_string(),
+    ]);
+    let data_output: String = match args.gatherer {
+        None => gather_list(all, output_format),
+        Some(x) => {
+            let gatherers: HashSet<String> = x.into_iter().collect::<HashSet<String>>();
+            gather_list(gatherers, output_format)
+        }
+    };
+    println!("{}", data_output);
 }

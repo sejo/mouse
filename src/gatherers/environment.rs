@@ -1,23 +1,28 @@
-use crate::types::fact::{FactData, Fact};
+use crate::types::fact::Fact;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::env;
 
 pub struct EnvironmentData {}
+impl EnvironmentData {}
 
-impl EnvironmentData {
+#[derive(Serialize, Deserialize)]
+pub struct EnvironmentValue {
+    key: String,
+    value: String,
+    time_set: u128,
 }
 
 impl Fact for EnvironmentData {
-    fn gather(&self) -> Vec<FactData>{
-        let mut vfd: Vec<FactData> = vec![];
-        let time_set = self.get_epoch_ms();
+    fn gather(&self) -> String {
+        let mut outmap: Vec<Value> = vec![];
         for (key, value) in env::vars() {
-            let fd =  FactData{
-                name: String::from("env_") + &key,
-                value: value,
-                time_set: time_set
-            };
-            vfd.push(fd);
+            let entry = json!({
+                "key": &key,
+                "value": value,
+            });
+            outmap.append(&mut vec![entry]);
         }
-        return vfd;
+        serde_json::to_string(&outmap).unwrap()
     }
 }
