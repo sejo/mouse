@@ -5,6 +5,10 @@ description = "Information gatherer for systems."
 version = "0.1.0"
 edition = "2021"
 
+[registries]
+gitea = { index = "https://gitea.sejo-it.be/SeJo-IT/_cargo-index" }
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
