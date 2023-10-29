@@ -36,7 +36,7 @@ steps:
     image: plugins/gitea-release
     settings:
       api_key:
-        from_secret: gitea_api_key
+        from_secret: builder_password
       base_url: https://gitea.sejo-it.be
       checksum: sha265
       files: /artifacts/*
