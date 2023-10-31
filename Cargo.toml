@@ -2,7 +2,8 @@
 name = "mouse"
 authors = ["Jochen Maes <jochen@sejo-it.be>"]
 description = "Information gatherer for systems."
-version = "0.1.0"
+# this will be overwritten during builds! so ignore
+version = "0.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
