@@ -42,7 +42,7 @@ steps:
       files: /artifacts/*
     volumes:
       - name: artifacts
-        path: /artifcats/
+        path: /artifacts/
     when:
       event:
         - tag
