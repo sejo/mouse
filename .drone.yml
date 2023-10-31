@@ -26,11 +26,11 @@ steps:
       - rustup target add aarch64-unknown-linux-musl
       - cargo build --target x86_64-unknown-linux-musl --bins -r
       - cargo rustc --target aarch64-unknown-linux-musl --bins -r -- -C linker=aarch64-none-elf-gcc
-      - cp target/x86_64-unknown-linux-musl/release/mouse /artifcats/mouse-amd64
-      - cp target/aarch64-unknown-linux-musl/release/mouse /artifcats/mouse-arm64 
+      - cp target/x86_64-unknown-linux-musl/release/mouse /artifacts/mouse-amd64
+      - cp target/aarch64-unknown-linux-musl/release/mouse /artifacts/mouse-arm64 
     volumes:
       - name: artifacts
-        path: /artifcats/
+        path: /artifacts/
 
   - name: create gitea release
     image: plugins/gitea-release
