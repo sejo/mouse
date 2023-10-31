@@ -1,14 +1,14 @@
 ---
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 kind: pipeline
 type: docker
 name: mouse-release
 
 platform:
   arch: amd64
-
-#trigger:
-  #  event:
-  #  - tag
 
 volumes:
   - name: dockersock
@@ -23,13 +23,17 @@ steps:
     commands:
       - apk add --no-cache musl-dev gcc-aarch64-none-elf
       - mkdir /artifacts/mouse-amd64
+      - cp LICENSE.txt /artifacts/mouse-amd64/
       - mkdir /artifacts/mouse-arm64
+      - cp LICENSE /artifacts/mouse-arm64/
       - rustup target add x86_64-unknown-linux-musl
       - rustup target add aarch64-unknown-linux-musl
       - cargo build --target x86_64-unknown-linux-musl --bins -r --config 'package.version="${DRONE_TAG##v}"'
       - CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=/usr/bin/aarch64-none-elf-gcc cargo build --target aarch64-unknown-linux-musl --bins -r --config 'package.version="${DRONE_TAG##v}"'
       - cp target/x86_64-unknown-linux-musl/release/mouse /artifacts/mouse-amd64/mouse
-      - cp target/aarch64-unknown-linux-musl/release/mouse /artifacts/mouse-arm64/mouse 
+      - cp target/aarch64-unknown-linux-musl/release/mouse /artifacts/mouse-arm64/mouse-arm64
+      - cd /artifacts && tar -cvzf mouse-amd64.tar.gz mouse-amd64/*
+      - cd /artifacts && tar -cvzf mouse-arm64.tar.gz mouse-arm64/*
     volumes:
       - name: artifacts
         path: /artifacts/
@@ -41,21 +45,7 @@ steps:
         from_secret: gitea_api_key
       base_url: https://gitea.sejo-it.be
       checksum: sha256
-      files: /artifacts/mouse-amd64
-    volumes:
-      - name: artifacts
-        path: /artifacts/
-    when:
-      event:
-        - tag
-  - name: create gitea release arm64
-    image: plugins/gitea-release
-    settings:
-      api_key:
-        from_secret: gitea_api_key
-      base_url: https://gitea.sejo-it.be
-      checksum: sha256
-      files: /artifacts/mouse-arm64
+      files: /artifacts/*.tar.gz
     volumes:
       - name: artifacts
         path: /artifacts/

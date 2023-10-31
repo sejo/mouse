@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 use std::process::Command;
 
 use crate::types::fact::{Fact, FactData};
@@ -7,10 +11,8 @@ pub struct SystemData {}
 
 impl SystemData {}
 
-
-
 #[derive(Serialize, Deserialize)]
-struct UnameData{
+struct UnameData {
     kernel_name: String,
     node_name: String,
     kernel_release: String,
