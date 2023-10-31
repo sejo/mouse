@@ -38,7 +38,7 @@ steps:
       api_key:
         from_secret: gitea_api_key
       base_url: https://gitea.sejo-it.be
-      checksum: sha265
+      checksum: sha256
       files: /artifacts/*
     volumes:
       - name: artifacts
