@@ -22,8 +22,8 @@ steps:
     image: rust:1.73-alpine
     commands:
       - apk add --no-cache musl-dev gcc-aarch64-none-elf
-      - mkdir /artifacts/amd64
-      - mkdir /artifacts/arm64
+      - mkdir /artifacts/mouse-amd64
+      - mkdir /artifacts/mouse-arm64
       - rustup target add x86_64-unknown-linux-musl
       - rustup target add aarch64-unknown-linux-musl
       - cargo build --target x86_64-unknown-linux-musl --bins -r --config 'package.version="${DRONE_TAG##v}"'
@@ -41,7 +41,7 @@ steps:
         from_secret: gitea_api_key
       base_url: https://gitea.sejo-it.be
       checksum: sha256
-      files: /artifacts/amd64/*
+      files: /artifacts/mouse-amd64
     volumes:
       - name: artifacts
         path: /artifacts/
@@ -55,7 +55,7 @@ steps:
         from_secret: gitea_api_key
       base_url: https://gitea.sejo-it.be
       checksum: sha256
-      files: /artifacts/arm64/*
+      files: /artifacts/mouse-arm64
     volumes:
       - name: artifacts
         path: /artifacts/
