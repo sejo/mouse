@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 # Get last created tag
 LTCOMMIT=$(git rev-list --abbrev-commit --tags --max-count=1)
 LTAG=$(git describe --abbrev=0 --tags ${LTCOMMIT} 2>/dev/null || true)
