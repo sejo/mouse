@@ -3,10 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::{types::fact::Fact, util::command::get_result_as_string};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize)]
 pub struct IPData {}
 impl IPData {}
 
@@ -14,7 +12,7 @@ impl Fact for IPData {
     fn gather(&self) -> String {
         let res = get_result_as_string("ip", vec!["-j", "addr"]);
         let jsonres: Value = serde_json::from_str(res.as_str()).unwrap();
-        let out = json!({ "ip_addr": jsonres });
+        let out = json!({ "ipaddr": jsonres });
         out.to_string()
     }
 }
@@ -26,7 +24,7 @@ impl Fact for IPRouteData {
         let res = get_result_as_string("ip", vec!["-j", "route"]);
         let jsonres: Value = serde_json::from_str(res.as_str()).unwrap();
         let out = json!({
-            "ip_route": jsonres
+            "iproute": jsonres
         });
         out.to_string()
     }

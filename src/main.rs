@@ -13,8 +13,10 @@ use crate::gatherers::environment::EnvironmentData;
 use crate::gatherers::ip::{IPData, IPRouteData};
 use crate::types::fact::Fact;
 use clap::Parser;
+use serde::de::Error;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
+use yaml_rust::{YamlEmitter, YamlLoader};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -40,13 +42,21 @@ fn gather_list(gatherers: HashSet<String>, output: &str) -> String {
             "ipaddr" => {
                 outmap.insert(
                     "ipaddr".to_string(),
-                    serde_json::from_str(&IPData {}.gather()).unwrap(),
+                    serde_json::from_str::<Value>(&IPData {}.gather())
+                        .unwrap()
+                        .get("ipaddr")
+                        .unwrap()
+                        .clone(),
                 );
             }
             "iproute" => {
                 outmap.insert(
                     "iproute".to_string(),
-                    serde_json::from_str(&IPRouteData {}.gather()).unwrap(),
+                    serde_json::from_str::<Value>(&IPRouteData {}.gather())
+                        .unwrap()
+                        .get("iproute")
+                        .unwrap()
+                        .clone(),
                 );
             }
             x => {
@@ -55,7 +65,7 @@ fn gather_list(gatherers: HashSet<String>, output: &str) -> String {
         };
     }
     match output {
-        "json" => serde_json::to_string(&outmap).unwrap(),
+        "json" => serde_json::to_string_pretty(&outmap).unwrap(),
         "yaml" => serde_yaml::to_string(&outmap).unwrap(),
         x => format!("Unknown output format {x}"),
     }
@@ -79,5 +89,18 @@ fn main() {
             gather_list(gatherers, output_format)
         }
     };
-    println!("{}", data_output);
+    match output_format {
+        "json" => println!("{}", data_output),
+        "yaml" => {
+            let tmp = format!("---\n{}", data_output);
+            let yr = YamlLoader::load_from_str(tmp.as_str()).unwrap();
+            let mut out = String::new();
+            {
+                let mut emitter = YamlEmitter::new(&mut out);
+                emitter.dump(&yr[0]).unwrap();
+            };
+            println!("{}", out)
+        }
+        x => println!("This should never print,.. but it did. Maybe this explains why: {x}"),
+    }
 }
