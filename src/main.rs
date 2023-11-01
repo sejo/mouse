@@ -13,6 +13,7 @@ use crate::gatherers::environment::EnvironmentData;
 use crate::gatherers::ip::{IPData, IPRouteData};
 use crate::types::fact::Fact;
 use clap::Parser;
+use gatherers::system::SystemData;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use yaml_rust::{YamlEmitter, YamlLoader};
@@ -58,6 +59,12 @@ fn gather_list(gatherers: HashSet<String>, output: &str) -> String {
                         .clone(),
                 );
             }
+            "system" => {
+                outmap.insert(
+                    "system".to_string(),
+                    serde_json::from_str(&SystemData {}.gather()).unwrap(),
+                );
+            }
             x => {
                 println!("unknown gatherer: {x}");
             }
@@ -80,6 +87,7 @@ fn main() {
         "env".to_string(),
         "ipaddr".to_string(),
         "iproute".to_string(),
+        "system".to_string(),
     ]);
     let data_output: String = match args.gatherer {
         None => gather_list(all, output_format),
