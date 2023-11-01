@@ -7,7 +7,8 @@ ADC=${DRONE_COMMIT:0:7}
 if [[ "${LTCOMMIT}" == "${ADC}" ]]; then
 	VERSION="${DRONE_TAG##v}"
 else
-	VERSION="${LTAG}-next-${ADV}"
+	VERSION="${LTAG##v}-next-${ADV}"
 fi
 
 sed -i "s/0\\.0\\.0/${VERSION}/" Cargo.toml
+cat Cargo.toml
