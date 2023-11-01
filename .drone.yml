@@ -21,8 +21,8 @@ steps:
   - name: build amd64
     image: rust:1.73-alpine
     commands:
-      - ./version.sh
-      - apk add --no-cache musl-dev gcc-aarch64-none-elf
+      - pwd && ls -al && ./version.sh
+      - apk add --no-cache musl-dev gcc-aarch64-none-elf bash
       - mkdir /artifacts/mouse-amd64
       - cp LICENSE.txt /artifacts/mouse-amd64/
       - mkdir /artifacts/mouse-arm64

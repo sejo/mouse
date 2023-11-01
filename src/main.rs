@@ -13,7 +13,6 @@ use crate::gatherers::environment::EnvironmentData;
 use crate::gatherers::ip::{IPData, IPRouteData};
 use crate::types::fact::Fact;
 use clap::Parser;
-use serde::de::Error;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use yaml_rust::{YamlEmitter, YamlLoader};
@@ -92,6 +91,9 @@ fn main() {
     match output_format {
         "json" => println!("{}", data_output),
         "yaml" => {
+            // We will run the string back through yaml_rust, for better output compatibility.
+            // We could choose to swwitch serde_yaml out completely but at this time I don't see
+            // a huge value, as once serde_yaml fixes their implementation,...
             let tmp = format!("---\n{}", data_output);
             let yr = YamlLoader::load_from_str(tmp.as_str()).unwrap();
             let mut out = String::new();
