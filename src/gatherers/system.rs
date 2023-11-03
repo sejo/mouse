@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::{fs, str, usize};
+use std::{fs, io::ErrorKind, str, usize};
 
 use sysinfo::{System, SystemExt};
 
@@ -38,8 +38,35 @@ impl Fact for DMIData {
     fn gather(&self) -> String {
         json!({
             "form_factor": get_form_factor("/sys/devices/virtual/dmi/id/chassis_type"),
+            "bios_date": get_string("/sys/devices/virtual/dmi/id/bios_date"),
+            "bios_vendor": get_string("/sys/devices/virtual/dmi/id/bios_vendor"),
+            "bios_version": get_string("/sys/devices/virtual/dmi/id/bios_version"),
+            "board_asset_tag": get_string("/sys/devices/virtual/dmi/id/board_asset_tag"),
+            "board_name": get_string("/sys/devices/virtual/dmi/id/board_name"),
+            "board_serial": get_string("/sys/devices/virtual/dmi/id/board_serial"),
+            "board_vendor": get_string("/sys/devices/virtual/dmi/id/board_vendor"),
+            "board_version": get_string("/sys/devices/virtual/dmi/id/board_version"),
+            "chassis_asset_tag": get_string("/sys/devices/virtual/dmi/id/chassis_asset_tag"),
+            "chassis_serial": get_string("/sys/devices/virtual/dmi/id/chassis_vendor"),
+            "chassis_vendor": get_string("/sys/devices/virtual/dmi/id/chassis_vendor"),
+            "chassis_version": get_string("/sys/devices/virtual/dmi/id/chassis_version"),
+            "product_name": get_string("/sys/devices/virtual/dmi/id/product_name"),
+            "product_serial": get_string("/sys/devices/virtual/dmi/id/product_serial"),
+            "product_uuid": get_string("/sys/devices/virtual/dmi/id/product_uuid"),
+            "product_version": get_string("/sys/devices/virtual/dmi/id/product_version"),
+            "system_vendor": get_string("/sys/devices/virtual/dmi/id/sys_vendor"),
         })
         .to_string()
+    }
+}
+
+fn get_string(path: &str) -> String {
+    match fs::read(path) {
+        Ok(x) => String::from_utf8(x).unwrap().trim().to_string(),
+        Err(y) => match y.kind() {
+            ErrorKind::PermissionDenied => "This data needs sudo or root permissions".to_string(),
+            other_error => format!("Could not retrieve {other_error}"),
+        },
     }
 }
 

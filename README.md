@@ -40,6 +40,6 @@ Aww, too bad, well you can always submit an issue or fix it yourself. It's open 
 
 ## I have more questions:
 
-matrix: @sejo:matrix.sejo-it.be  
+matrix: #mouse-dev:matrix.sejo-it.be  
 discord: sejoit (legacy: sejo#5402)  
 email: jochen@sejo-it.be
