@@ -13,7 +13,7 @@ use crate::gatherers::environment::EnvironmentData;
 use crate::gatherers::ip::{IPData, IPRouteData};
 use crate::types::fact::Fact;
 use clap::Parser;
-use gatherers::system::SystemData;
+use gatherers::system::{DMIData, SystemData};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use yaml_rust::{YamlEmitter, YamlLoader};
@@ -33,6 +33,12 @@ fn gather_list(gatherers: HashSet<String>, output: &str) -> String {
     let mut outmap: HashMap<String, Value> = HashMap::new();
     for g in gatherers {
         match g.as_str() {
+            "dmi" => {
+                outmap.insert(
+                    "dmi".to_string(),
+                    serde_json::from_str(&DMIData {}.gather()).unwrap(),
+                );
+            }
             "env" => {
                 outmap.insert(
                     "environment".to_string(),
@@ -84,6 +90,7 @@ fn main() {
         _ => "yaml",
     };
     let all: HashSet<String> = HashSet::from([
+        "dmi".to_string(),
         "env".to_string(),
         "ipaddr".to_string(),
         "iproute".to_string(),
